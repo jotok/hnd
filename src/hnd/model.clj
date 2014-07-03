@@ -21,7 +21,9 @@
    :type (if (< (rand) p-dove) :dove :hawk)})
 
 (defn make-grid
-  "Construct an nrow x ncol grid of agents. A cell in the grid will be occupied with probability p-occupied, and the function make-agent-fn will be called to construct every agent." 
+  "Construct an nrow x ncol grid of agents. A cell in the grid will be occupied with
+  probability p-occupied, and the function make-agent-fn will be called to construct
+  every agent." 
   [nrow ncol & {:keys
                 [p-occupied make-agent-fn]
                 :or {p-occupied default-p-occupied 
@@ -68,25 +70,30 @@
        (map first)))
 
 (defn filter-cell-neighborhoods
-  "Return a list of neighborhoods whose centers satisfy the predicate. The values inthe list are of the form [r cell], where r is the index of the cell."
+  "Return a list of neighborhoods whose centers satisfy the predicate. The values inthe
+  list are of the form [r cell], where r is the index of the cell."
   [ca pred]
   (for [r (filter-cell-indices ca pred)]
     [r (get-neighborhood ca r)]))
 
 (defn filter-neighbor-dir
-  "Returns a list of directions whose corresponding cells satisfy the given predicate. dir-cell-pred should be a function of a direction-cell pair."
+  "Returns a list of directions whose corresponding cells satisfy the given predicate.
+  dir-cell-pred should be a function of a direction-cell pair."
   [nbhd dir-cell-pred]
   (->> (dissoc nbhd :c)
        (filter dir-cell-pred)
        (map first)))
 
 (defn filter-neighbor-cell-dir
-  "Returns a list of directions whose corresponding cells satisfy the given predicate. cell-pred should be a function of a cell."
+  "Returns a list of directions whose corresponding cells satisfy the given predicate.
+  cell-pred should be a function of a cell."
   [nbhd cell-pred]
   (filter-neighbor-dir nbhd (fn [[dir cell]] (cell-pred cell))))
 
 (defn center-propose-action-dir
-  "Adds the key :propose-action-dir to the center cell with a value corresponding to a randomly chosen neighboring cell that satisfies cell-pred. If no neighbors satisfy cell-pred, the center cell is not altered. Returns the center cell."
+  "Adds the key :propose-action-dir to the center cell with a value corresponding to a
+  randomly chosen neighboring cell that satisfies cell-pred. If no neighbors satisfy
+  cell-pred, the center cell is not altered. Returns the center cell."
   [nbhd cell-pred]
   (if-let [s (seq (filter-neighbor-cell-dir nbhd cell-pred))]
     (assoc (:c nbhd) :propose-action-dir (rand-nth s))
@@ -98,7 +105,9 @@
   (#{[:n :s] [:s :n] [:e :w] [:w :e]} [dir (:propose-action-dir cell)]))
 
 (defn center-accept-action-dir
-  "Adds the key :accept-action-dir to the center cell with a value corresponding to a randomly chosen neighboring cell for which wants-to-act-on-center? is true. If no neighbors want to act on the center cell, it is not altered. Returns the center cell."
+  "Adds the key :accept-action-dir to the center cell with a value corresponding to a
+  randomly chosen neighboring cell for which wants-to-act-on-center? is true. If no
+  neighbors want to act on the center cell, it is not altered. Returns the center cell."
   [nbhd]
   (if-let [s (seq (filter-neighbor-dir nbhd wants-to-act-on-center?))]
     (assoc (:c nbhd) :accept-action-dir (rand-nth s))
@@ -110,12 +119,14 @@
   (#{[:n :s] [:s :n] [:e :w] [:w :e]} [dir (:accept-action-dir cell)]))
 
 (defn update-grid
-  "Given a list of index-cell pairs, replace the cells in grid with the corresponding values in ix-cells."
+  "Given a list of index-cell pairs, replace the cells in grid with the corresponding
+  values in ix-cells."
   [grid ix-cells]
   (reduce (fn [g [ix cell]] (assoc g ix cell)) grid ix-cells))
 
 (defn update-ca
-  "For each cell in ca satisfying cell-pred, call update-fn on the cell and update ca with the new value."
+  "For each cell in ca satisfying cell-pred, call update-fn on the cell and update ca
+  with the new value."
   [ca cell-pred update-fn]
   (let [ix-nbhds (filter-cell-neighborhoods ca cell-pred)
         ix-cells (for [[ix nbhd] ix-nbhds] [ix (update-fn nbhd)])]
@@ -182,7 +193,8 @@
 ;; Birth-Death rules
 
 (defn cull
-  "If the cell score is 0 or less, return an empty cell, otherwise return the original cell."
+  "If the cell score is 0 or less, return an empty cell, otherwise return the original
+  cell."
   [cell]
   (if (and (:score cell)
            (<= (:score cell) 0))
@@ -204,7 +216,8 @@
      (assoc agent :score (quot current-score 2))]))
 
 (defn abundant? 
-  "Returns true if the cell is occupied and the score of the occupant is greater than or equal to threshold."  
+  "Returns true if the cell is occupied and the score of the occupant is greater than or
+  equal to threshold."  
   [cell & {:keys [threshold] :or {threshold default-split-at}}]
   (and (:score cell) 
        (>= (:score cell) threshold)))
