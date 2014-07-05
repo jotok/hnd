@@ -1,6 +1,6 @@
 # hnd
 
-An implementation of the hawk and dove game as an agent-based model. See [/programming/2014/07/05/the-hawk-and-dove-game/](/programming/2014/07/05/the-hawk-and-dove-game/).
+An implementation of the hawk and dove game as an agent-based model. See [http://tokle.us/programming/2014/07/05/the-hawk-and-dove-game/](http://tokle.us/programming/2014/07/05/the-hawk-and-dove-game/).
 
 ## Usage
 
