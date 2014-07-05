@@ -91,9 +91,10 @@
   (filter-neighbor-dir nbhd (fn [[dir cell]] (cell-pred cell))))
 
 (defn center-propose-action-dir
-  "Adds the key :propose-action-dir to the center cell with a value corresponding to a
-  randomly chosen neighboring cell that satisfies cell-pred. If no neighbors satisfy
-  cell-pred, the center cell is not altered. Returns the center cell."
+  "Adds the key :propose-action-dir to the center cell with a value
+  corresponding to a randomly chosen neighboring cell that satisfies
+  cell-pred. If no neighbors satisfy cell-pred, the center cell is not
+  altered. Returns the center cell."
   [nbhd cell-pred]
   (if-let [s (seq (filter-neighbor-cell-dir nbhd cell-pred))]
     (assoc (:c nbhd) :propose-action-dir (rand-nth s))
@@ -105,9 +106,10 @@
   (#{[:n :s] [:s :n] [:e :w] [:w :e]} [dir (:propose-action-dir cell)]))
 
 (defn center-accept-action-dir
-  "Adds the key :accept-action-dir to the center cell with a value corresponding to a
-  randomly chosen neighboring cell for which wants-to-act-on-center? is true. If no
-  neighbors want to act on the center cell, it is not altered. Returns the center cell."
+  "Adds the key :accept-action-dir to the center cell with a value
+  corresponding to a randomly chosen neighboring cell for which
+  wants-to-act-on-center? is true. If no neighbors want to act on the
+  center cell, it is not altered. Returns the center cell."
   [nbhd]
   (if-let [s (seq (filter-neighbor-dir nbhd wants-to-act-on-center?))]
     (assoc (:c nbhd) :accept-action-dir (rand-nth s))
@@ -119,21 +121,20 @@
   (#{[:n :s] [:s :n] [:e :w] [:w :e]} [dir (:accept-action-dir cell)]))
 
 (defn update-grid
-  "Given a list of index-cell pairs, replace the cells in grid with the corresponding
-  values in ix-cells."
+  "Given a list of index-cell pairs, replace the cells in grid with
+  the corresponding values in ix-cells."
   [grid ix-cells]
   (reduce (fn [g [ix cell]] (assoc g ix cell)) grid ix-cells))
 
 (defn update-ca
-  "For each cell in ca satisfying cell-pred, call update-fn on the cell and update ca
-  with the new value."
-  [ca cell-pred update-fn]
-  (let [ix-nbhds (filter-cell-neighborhoods ca cell-pred)
+  "For each cell in ca satisfying apply-to, call update-fn on the
+  cell neighbohood and update ca with the new value."
+  [ca  update-fn & {:keys [apply-to] :or {apply-to (constantly true)}}]
+  (let [ix-nbhds (filter-cell-neighborhoods ca apply-to)
         ix-cells (for [[ix nbhd] ix-nbhds] [ix (update-fn nbhd)])]
     (assoc ca :grid (update-grid (:grid ca) ix-cells))))
 
 (def not-empty? (complement empty?))
-(def all-cells (constantly true))
 
 ;; Game rules
 
@@ -168,13 +169,14 @@
   "Perform a single game-playing step."
   [ca]
   (-> ca
-      (update-ca not-empty? #(center-propose-action-dir % not-empty?))
-      (update-ca :propose-action-dir complete-games)))
+      (update-ca #(center-propose-action-dir % not-empty?) :apply-to not-empty?)
+      (update-ca complete-games :apply-to :propose-action-dir)))
 
 ;; Movement rules
 
 (defn complete-move
-  "Update the center cell with any movement specified in the neighborhood."
+  "Update the center cell with any movement specified in the
+  neighborhood."
   [nbhd]
   (let [accept-action-dir (:accept-action-dir (:c nbhd))
         target-dir (filter-neighbor-dir nbhd wants-action-from-center?)
@@ -186,15 +188,15 @@
 (defn move-step
   [ca]
   (-> ca
-      (update-ca not-empty? #(center-propose-action-dir % empty?))
-      (update-ca empty? center-accept-action-dir)
-      (update-ca all-cells complete-move)))
+      (update-ca #(center-propose-action-dir % empty?) :apply-to not-empty?)
+      (update-ca center-accept-action-dir :apply-to empty?)
+      (update-ca complete-move)))
 
 ;; Birth-Death rules
 
 (defn cull
-  "If the cell score is 0 or less, return an empty cell, otherwise return the original
-  cell."
+  "If the cell score is 0 or less, return an empty cell, otherwise
+  return the original cell."  
   [cell]
   (if (and (:score cell)
            (<= (:score cell) 0))
@@ -240,9 +242,9 @@
   [ca]
   (-> ca
       thin-the-herd
-      (update-ca abundant? #(center-propose-action-dir % empty?))
-      (update-ca empty? center-accept-action-dir)
-      (update-ca all-cells complete-split)))
+      (update-ca #(center-propose-action-dir % empty?) :apply-to abundant?)
+      (update-ca center-accept-action-dir :apply-to empty?)
+      (update-ca complete-split)))
 
 ;; model step
 
